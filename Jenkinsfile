@@ -9,7 +9,7 @@ pipeline {
         stage('MVN Build') {
             steps {
                 echo '<--------------- Building --------------->'
-                sh 'mvn package'
+                sh 'mvn package -f MyWebApp/pom.xml'
                 echo '<------------- Build completed --------------->'
             }
         }
