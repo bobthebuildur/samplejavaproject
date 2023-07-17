@@ -1,0 +1,33 @@
+Resources:
+  MyEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: CloudWatch Event Rule for CodeBuild State Change
+      EventPattern:
+        source:
+          - aws.codebuild
+        detail-type:
+          - "CodeBuild Build State Change"
+        detail:
+          build-status:
+          - FAILED
+          - SUCCEEDED
+      State: ENABLED
+      Targets:
+        - Arn: !Ref MySNSTopic
+          Id: CodeBuildStateChangeNotification
+          InputTransformer:
+            InputPathsMap:
+              buildStatus: "$.detail['build-status']"
+              projectName: "$.detail['project-name']"
+            InputTemplate: |
+              {
+                "default": "",
+                "email": "CodeBuild project '{projectName}' has {buildStatus}.\n"
+              }
+
+  MySNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: CodeBuildStateChangeTopic
+      TopicName: Mytopic-test
