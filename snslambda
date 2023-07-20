@@ -1,0 +1,90 @@
+import json
+import boto3
+
+def lambda_handler(event, context):
+    try:
+        build_status = event['detail']['build-status']
+        environment_vars = event['detail']['additional-information']['envir']['environment-var']
+
+        # Extract all values from the "environment-var" array
+        environment_values = [env_var['value'] for env_var in environment_vars]
+
+        # Construct the message content with the extracted information
+        message = f"CodeBuild project has {build_status}.\nEnvironment Variables:\n{', '.join(environment_values)}"
+
+        # Publish the message to the SNS topic
+        sns = boto3.client('sns')
+        topic_arn = 'YOUR_SNS_TOPIC_ARN'  # Replace with your SNS topic ARN
+
+        sns.publish(TopicArn=topic_arn, Message=message)
+
+        return {
+            'statusCode': 200,
+            'body': 'Notification sent successfully.'
+        }
+    except Exception as e:
+        print('Error:', e)
+        raise e
+
+
+
+
+_________
+Imports:
+
+python
+Copy code
+import json
+import boto3
+We import the necessary modules: json for working with JSON data and boto3 for interacting with AWS services.
+
+Lambda Handler:
+
+python
+Copy code
+def lambda_handler(event, context):
+The Lambda function starts with the lambda_handler function, which serves as the entry point for the Lambda execution. AWS Lambda will invoke this function when the function is triggered by a CloudWatch Event.
+
+Event Processing:
+
+python
+Copy code
+try:
+    build_status = event['detail']['build-status']
+    environment_vars = event['detail']['additional-information']['envir']['environment-var']
+The function extracts the build-status and environment-var values from the event argument, which represents the event data sent by CloudWatch.
+
+Extract Environment Variable Values:
+
+python
+Copy code
+environment_values = [env_var['value'] for env_var in environment_vars]
+The function uses a list comprehension to extract all the values from the "environment-var" array. It creates a new list environment_values containing only the 'value' field of each element in the environment-vars array.
+
+Construct the Message Content:
+
+python
+Copy code
+message = f"CodeBuild project has {build_status}.\nEnvironment Variables:\n{', '.join(environment_values)}"
+The function constructs the message content with the extracted information. It uses f-strings (formatted strings) to include the build_status in the message. It also joins all the environment variable values from the environment_values list into a single string using the join() method and separates them with commas.
+
+Publish to SNS Topic:
+
+python
+Copy code
+sns = boto3.client('sns')
+topic_arn = 'YOUR_SNS_TOPIC_ARN'  # Replace with your SNS topic ARN
+
+sns.publish(TopicArn=topic_arn, Message=message)
+The function uses the boto3.client() method to create an SNS client. It then specifies the ARN of the SNS topic (topic_arn) where the message will be sent. Finally, it publishes the message to the specified SNS topic using the sns.publish() method.
+
+Error Handling:
+
+python
+Copy code
+except Exception as e:
+    print('Error:', e)
+    raise e
+The function includes error handling to catch any exceptions that might occur during the execution. If an error occurs, it prints the error message and raises the exception to signal Lambda that an error occurred.
+
+The Lambda function processes the CloudWatch Events, extracts the desired information from the event payload, constructs the message content, and publishes it to the specified SNS topic.
