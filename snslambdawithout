@@ -1,0 +1,29 @@
+SNS lambda without error handling
+
+Yes, you can create the Lambda function without explicit error handling. If you remove the try-except block from the code, Lambda will handle any uncaught exceptions automatically and consider them as function errors.
+
+Here's the updated Lambda function code without error handling:
+
+python
+Copy code
+import json
+import boto3
+
+def lambda_handler(event, context):
+    build_status = event['detail']['build-status']
+    environment_vars = event['detail']['additional-information']['envir']['environment-var']
+
+    # Extract all values from the "environment-var" array
+    environment_values = [env_var['value'] for env_var in environment_vars]
+
+    # Construct the message content with the extracted information
+    message = f"CodeBuild project has {build_status}.\nEnvironment Variables:\n{', '.join(environment_values)}"
+
+    # Publish the message to the SNS topic
+    sns = boto3.client('sns')
+    topic_arn = 'YOUR_SNS_TOPIC_ARN'  # Replace with your SNS topic ARN
+
+    sns.publish(TopicArn=topic_arn, Message=message)
+Without the try-except block, if an error occurs during the Lambda function execution, Lambda will automatically log the error and consider the function to have encountered an error. The error message will be visible in the AWS Lambda console, and Lambda will automatically retry the function according to the function's retry behavior (if configured).
+
+Keep in mind that while removing the explicit error handling simplifies the code, it's essential to ensure that the event payload and the necessary fields are present and correctly formatted to avoid unexpected errors during execution. You can use the AWS Lambda function monitoring and logging features to review any errors or exceptions that may occur during function execution.
